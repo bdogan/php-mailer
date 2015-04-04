@@ -1,0 +1,12 @@
+{
+    "name": "bdogan/php-mailer",
+    "authors": [
+        {
+            "name": "Burak Doğan",
+            "email": "bdogan85@gmail.com"
+        }
+    ],
+    "require": {
+      "nette/mail": "2.3.0"
+    }
+}

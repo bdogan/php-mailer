@@ -1,0 +1,9 @@
+<?php
+  $config = array(
+    'timezone' => 'Europe/Istanbul',
+    'pickup' => 'mail/pickup',
+    'queue' => 'mail/queue',
+    'error' => 'mail/error',
+    'sent' => 'mail/sent'
+  );
+?>
