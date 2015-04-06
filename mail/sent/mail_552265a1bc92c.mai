@@ -1,0 +1,13 @@
+host:mail.platinmarketreform.com
+user:bildirim@platinmarketreform.com
+password:123456789
+from:bildirim@platinmarketreform.com
+to:burak@platinmarket.com
+cc:
+body: ajhkjsdföçşiğü
+asdfjbsdkfsdföçö
+asdsdfsdfgsdff.ii
+sdfffsdff
+subject:192.168.100.50 üzerinden ziyaretçi mesajı
+source:http://www.yildizmobilya.com.tr/mail_sablonlari/iletisim.asp?islem=iletisim_mail_gonder&sid=2128374418&iletisim_isim=samet&iletisim_email=samet%40platinmarket.com&iletisim_tel=%28555%29+555-55-55&iletisim_mesaj=test+maili&gizlilik_politikasi_onay=1
+usessl:0
