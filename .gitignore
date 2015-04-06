@@ -1,4 +1,9 @@
 Vendor/
 composer.lock
 config.php
-log
+log/
+mail/queue
+mail/pickup
+mail/error
+mail/sent
+^log/empty
