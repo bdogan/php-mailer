@@ -31,10 +31,11 @@ if (isset($config['validator_options']) && is_array($config['validator_options']
 define("DS", isset($config['DS']) ? $config['DS'] : "/");
 define("DEBUG", isset($config['debug']) ? $config['debug'] : true);
 define("LOG", isset($config['log']) ? $config['log'] : false);
-define("LOG_FILE", isset($config['log_file']) ? $config['log_file'] : 'log');
-define("LOG_FORMAT", isset($config['log_format']) ? $config['log_format'] : 'eventtime identity host user from to cc subject last_error');
+define("LOG_FOLDER", isset($config['log_folder']) ? $config['log_folder'] : 'log');
+define("LOG_FORMAT", isset($config['log_format']) ? $config['log_format'] : 'event_time identity host user from to cc subject status last_error');
 
 // Checking Folders
+if (LOG > -1 && !file_exists(LOG_FOLDER)) WriteError("'" . LOG_FOLDER  . "' folder not found", false);
 foreach ($folders as $folder) {
   if (!isset($config[$folder])) WriteError("'" . $folder  . "' folder not set in config file", false);
   if (!file_exists($config[$folder])) WriteError("'" . $folder  . "' not found", false);
@@ -45,9 +46,7 @@ if (isset($config['timezone'])) date_default_timezone_set($config['timezone']);
 
 // Get Current Date Time
 $now = date('m/d/Y H:i:s', time());
-Write("------------------------------------");
 Write("PHP Mail Sender Started at " . $now);
-
 
 Write("Checking pickup folder");
 $files = ReadFiles($config['pickup']);
@@ -78,13 +77,11 @@ if (count($files) === 0) {
 }
 
 foreach ($files as $file) {
+  $mail = MailStructure();
   try {
     
-    $now = date('m/d/Y H:i:s', time());
-
-    $mail = ParseMail($file);
+    $mail = ParseMail($file, $mail);
     $mail = ControlMail($mail);
-    $mail['event_time'] = $now;
     
     // Validate 'to' address
     $validator = new ValidatorEmail(array($mail['to']), $mail['from'], $validator_options);
@@ -118,13 +115,15 @@ foreach ($files as $file) {
     $mail['last_error'] = null;
     rename($file, $config['sent'] . DS . uniqid(is_null($mail['identity']) ? "mail_" : $mail['identity'] . "_") . ".mai");
 
+    $mail['status'] = 0;
+    LogMail($mail);
   } catch(Exception $err) {
-
     $mail['last_error'] = $err->__toString();
+    $mail['status'] = 1;
     ArrayToFile($mail, $config['error'] . DS . uniqid(is_null($mail['identity']) ? "mail_" : $mail['identity'] . "_") . ".mai");
     unlink($file);
+    LogMail($mail);
     WriteError($err);
-
   }
 }
 
@@ -150,13 +149,14 @@ function MailStructure(){
     'usessl' => '0',
     'from_source' => false,
     'last_error' => null,
-    'html' => true,
-    'event_time'=> null
+    'html' => null,
+    'event_time'=> date('Y-m-dTH:i:s', time()),
+    'status' => 0
   );
 }
 
-function ParseMail($file) {
-  $mail = MailStructure();
+function ParseMail($file, $mail) {
+  
   $patterns = array();
   foreach ($mail as $key => $value) $patterns[$key] = '/' . $key . ':(.*?)(\n(' . implode('|', array_keys($mail)) .  '):|\z)/s';
   
@@ -177,13 +177,16 @@ function ControlMail($mail){
   if (!is_null($mail['source'])) {
     $mail['body'] = file_get_contents_utf8($mail['source']);
     $mail['from_source'] = true;
+    $mail['html'] = is_null($mail['html']) ? true : $mail['html']; 
   } else {
     $mail['from_source'] = false;
+    $mail['html'] = is_null($mail['html']) ? true : $mail['html'];
   }
   return $mail;
 }
 
 function WriteError($errObj = null, $resume = true){
+  LogError($errObj);
   if (DEBUG === false) return;
   $message = null;
   if ($errObj instanceof Exception) {
@@ -198,11 +201,11 @@ function WriteError($errObj = null, $resume = true){
 }
 
 function Write($targetObj = null, $newline = true){
-  if (DEBUG === false) return;
-
   $message = null;
   $message .= print_r($targetObj, true);
   
+  LogDebug($message);
+  if (DEBUG === false) return;
   fwrite(STDOUT, $message);
   if ($newline) fwrite(STDOUT, "\n");
 }
@@ -222,8 +225,50 @@ function ReadFiles($folder) {
   return $files;
 }
 
-function LogData($log_data) {
+function LogMail($mail) {
+  $status = $mail['status'];
+  if ($status === "0" && LOG < 1) return;
+  if (LOG < 0) return;
+  $message = LOG_FORMAT;
+  $message = preg_replace('/([a-zA-Z_]+)\s?/i', '%$1% ', $message);
+  foreach ($mail as $key => $value) {
+    $data = null;
+    if (isset($mail[$key])) $data = $mail[$key];
+    if (is_null($data)) $data = "0";
+    $data = explode("\n", $data)[0];
+    $message = str_replace("%" . $key . "%", $data, $message);
+  } 
+  $message = preg_replace('/(%[a-zA-Z]+?%)/i', ' ', $message);
+  LogWrite($message);
+}
 
+function LogWrite($message) {
+  $fileName = 'php_mailer_' . date('Y-m-d') . '.log';
+  try {
+    file_put_contents(LOG_FOLDER . DS . $fileName, $message . "\n", FILE_APPEND | LOCK_EX);
+  } catch (Exception $e) {
+    echo "\n" . $e->__toString();
+  }
+}
+
+function LogError($log_data){
+  if (LOG > 1) LogData($log_data);
+}
+
+function LogDebug($log_data) {
+  if (LOG > 2) LogData($log_data);
+}
+
+function LogData($log_data) {
+  $message = "";
+  if ($log_data instanceof Exception) {
+    $ex_message = $log_data->__toString();
+    $ex_message = "# " . str_replace("\n", "\n# ", $ex_message);
+    $message = $ex_message;
+  }
+  if (is_string($log_data)) $message = "# " . $log_data;
+  if (is_null($message)) return;
+  LogWrite($message);
 }
 
 function file_get_contents_utf8($fn) {
