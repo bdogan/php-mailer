@@ -98,7 +98,8 @@ foreach ($files as $file) {
     $hostSettings = array(
         'host' => $mail['host'],
         'username' => $mail['user'],
-        'password' => $mail['password']
+        'password' => $mail['password'],
+        'port' => intval($mail['port'], 10)
     );
     if ($mail['usessl'] == '1') $hostSettings['secure'] = 'ssl';
 
@@ -140,6 +141,7 @@ function MailStructure(){
     'host' => 'mail.platinmarketreform.com',
     'user' => 'bildirim@platinmarketreform.com',
     'password' => '123456789',
+    'port' => 587,
     'body' => null,
     'source' => null,
     'from' => null,
