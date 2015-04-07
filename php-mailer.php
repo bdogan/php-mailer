@@ -182,6 +182,7 @@ function ControlMail($mail){
     $mail['from_source'] = false;
     $mail['html'] = is_null($mail['html']) ? true : $mail['html'];
   }
+  $mail['subject'] = get_utf8($mail['subject']);
   return $mail;
 }
 
@@ -273,8 +274,12 @@ function LogData($log_data) {
 
 function file_get_contents_utf8($fn) {
   $content = file_get_contents($fn);
-    return mb_convert_encoding($content, 'UTF-8',
-      mb_detect_encoding($content, 'UTF-8, ISO-8859-9', true));
+    return get_utf8($content);
+}
+
+function get_utf8($input){
+  return mb_convert_encoding($input, 'UTF-8',
+      mb_detect_encoding($input, 'UTF-8, ISO-8859-9', true));
 }
 
 // Validation Exception
