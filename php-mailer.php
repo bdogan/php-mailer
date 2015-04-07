@@ -1,5 +1,3 @@
-#!/usr/bin/php
-
 <?php
 // Global
 $configFile = "config.php";
@@ -214,7 +212,7 @@ function ReadFiles($folder) {
   $files = array();
   if ($handle = opendir($folder)) {
     while (false !== ($file = readdir($handle))) { 
-      if ($file == '.' || $file == '..') continue; 
+      if ($file == '.' || $file == '..' || $file == 'empty') continue; 
       $file = $folder . DS . $file; 
       if (is_file($file)) $files[]  = $file; 
     } 
@@ -238,7 +236,7 @@ function LogMail($mail) {
     $data = explode("\n", $data)[0];
     $message = str_replace("%" . $key . "%", $data, $message);
   } 
-  $message = preg_replace('/(%[a-zA-Z]+?%)/i', ' ', $message);
+  $message = preg_replace('/(%[a-zA-Z]+?%)/i', '0', $message);
   LogWrite($message);
 }
 
@@ -279,7 +277,6 @@ function file_get_contents_utf8($fn) {
 
 // Validation Exception
 class ValidationException extends Exception {
-  
 }
 
 ?>
