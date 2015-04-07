@@ -1,15 +1,18 @@
 <?php
 // Global
 $configFile = "config.php";
+$baseFolder = dirname(__FILE__);
 $folders = array('pickup', 'queue', 'error', 'sent');
 
+define('DS', "/");
+
 // Config
-if (!file_exists($configFile)) WriteError($configFile . " not found", false);
-require $configFile;
+if (!file_exists($baseFolder . DS . $configFile)) WriteError($configFile . " not found", false);
+require $baseFolder . DS . $configFile;
 
 // Composer
-if (!file_exists("vendor/autoload.php")) WriteError("Run composer install first", false);
-require "vendor/autoload.php"; //Composer Auto Load
+if (!file_exists($baseFolder . DS . "vendor/autoload.php")) WriteError("Run composer install first", false);
+require $baseFolder . DS . "vendor" . DS . "autoload.php"; //Composer Auto Load
 
 // Depencies
 use Nette\Mail\Message;
@@ -26,7 +29,6 @@ $validator_options = array(
 if (isset($config['validator_options']) && is_array($config['validator_options'])) $validator_options = $config['validator_options'];
 
 // Define
-define('DS', isset($config['DS']) ? $config['DS'] : "/");
 define('DEBUG', isset($config['debug']) ? $config['debug'] : true);
 define('LOG', isset($config['log']) ? $config['log'] : false);
 define('LOG_FOLDER', isset($config['log_folder']) ? $config['log_folder'] : 'log');
