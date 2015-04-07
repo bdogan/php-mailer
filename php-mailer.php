@@ -26,11 +26,11 @@ $validator_options = array(
 if (isset($config['validator_options']) && is_array($config['validator_options'])) $validator_options = $config['validator_options'];
 
 // Define
-define("DS", isset($config['DS']) ? $config['DS'] : "/");
-define("DEBUG", isset($config['debug']) ? $config['debug'] : true);
-define("LOG", isset($config['log']) ? $config['log'] : false);
-define("LOG_FOLDER", isset($config['log_folder']) ? $config['log_folder'] : 'log');
-define("LOG_FORMAT", isset($config['log_format']) ? $config['log_format'] : 'event_time identity host user from to cc subject status last_error');
+define('DS', isset($config['DS']) ? $config['DS'] : "/");
+define('DEBUG', isset($config['debug']) ? $config['debug'] : true);
+define('LOG', isset($config['log']) ? $config['log'] : false);
+define('LOG_FOLDER', isset($config['log_folder']) ? $config['log_folder'] : 'log');
+define('LOG_FORMAT', isset($config['log_format']) ? $config['log_format'] : 'event_time identity host user from to cc subject status last_error');
 
 // Checking Folders
 if (LOG > -1 && !file_exists(LOG_FOLDER)) WriteError("'" . LOG_FOLDER  . "' folder not found", false);
