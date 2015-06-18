@@ -13,6 +13,7 @@
     'relay_host' => '',
     'relay_port' => 587,
     'relay_user' => '',
-    'relay_password' => ''
+    'relay_password' => '',
+    'relay_ssl' => false
   );
 ?>

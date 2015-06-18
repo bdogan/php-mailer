@@ -39,6 +39,7 @@ if (!isset($config["relay_host"])) $config["relay_host"] = "";
 if (!isset($config["relay_port"])) $config["relay_port"] = 587;
 if (!isset($config["relay_user"])) $config["relay_port"] = "";
 if (!isset($config["relay_password"])) $config["relay_port"] = "";
+if (!isset($config["relay_ssl"])) $config["relay_ssl"] = false;
 
 // Checking Folders
 if (LOG > -1 && !file_exists(LOG_FOLDER)) WriteError("'" . LOG_FOLDER  . "' folder not found", false);
@@ -99,6 +100,16 @@ foreach ($files as $file) {
       throw new ValidationException($mail['to'] . " -> " . $result[$mail['to']]['info']);
     }
 
+    // Send mail
+    $mailObj = new Message;
+    $hostSettings = array(
+        'host' => $config["relay_host"],
+        'username' => $config["relay_user"],
+        'password' => $config["relay_password"],
+        'port' => intval($config["relay_port"], 10)
+    );
+    if ($config['relay_ssl'] == true) $hostSettings['secure'] = 'ssl';
+
     $senderObj = new Nette\Mail\SmtpMailer($hostSettings);
 
     $mailObj->setFrom($mail['from'])
@@ -134,10 +145,6 @@ function ArrayToFile($source = array(), $destination) {
 function MailStructure($config = array()){
   return array(
     'identity' => null,
-    'host' => $config["relay_host"],
-    'user' => $config["relay_user"],
-    'password' => $config["relay_password"],
-    'port' => $config["relay_port"],
     'body' => null,
     'source' => null,
     'from' => null,
