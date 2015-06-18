@@ -4,6 +4,15 @@
     'pickup' => 'mail/pickup',
     'queue' => 'mail/queue',
     'error' => 'mail/error',
-    'sent' => 'mail/sent'
+    'sent' => 'mail/sent',
+    'DS' => '/',
+    'debug' => true,
+    'log' => 1,
+    'log_folder' => '/var/log/php_mailer',
+    'log_format' => 'event_time identity host user from to status',
+    'relay_host' => '',
+    'relay_port' => 587,
+    'relay_user' => '',
+    'relay_password' => ''
   );
 ?>

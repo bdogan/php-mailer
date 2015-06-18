@@ -34,13 +34,19 @@ define('LOG', isset($config['log']) ? $config['log'] : false);
 define('LOG_FOLDER', isset($config['log_folder']) ? $config['log_folder'] : 'log');
 define('LOG_FORMAT', isset($config['log_format']) ? $config['log_format'] : 'event_time identity host user from to cc subject status last_error');
 
+// Checking Relay Host Settings
+if (!isset($config["relay_host"])) $config["relay_host"] = "";
+if (!isset($config["relay_port"])) $config["relay_port"] = 587;
+if (!isset($config["relay_user"])) $config["relay_port"] = "";
+if (!isset($config["relay_password"])) $config["relay_port"] = "";
+
 // Checking Folders
 if (LOG > -1 && !file_exists(LOG_FOLDER)) WriteError("'" . LOG_FOLDER  . "' folder not found", false);
 foreach ($folders as $folder) {
   if (!isset($config[$folder])) WriteError("'" . $folder  . "' folder not set in config file", false);
   if (!file_exists($config[$folder])) WriteError("'" . $folder  . "' not found", false);
 }
-  
+
 // Checking Timezone set
 if (isset($config['timezone'])) date_default_timezone_set($config['timezone']);
 
@@ -77,31 +83,21 @@ if (count($files) === 0) {
 }
 
 foreach ($files as $file) {
-  $mail = MailStructure();
+  $mail = MailStructure($config);
   try {
-    
+
     $mail = ParseMail($file, $mail);
     $mail = ControlMail($mail);
-    
+
     // Validate 'to' address
     $validator = new ValidatorEmail(array($mail['to']), $mail['from'], $validator_options);
     $result = $validator->getResults();
     if (is_array($result[$mail['to']]) && $result[$mail['to']]['info'] === "catch all detected") $result[$mail['to']] = 1; //Catch All Prevented
     if (!isset($result[$mail['to']])) $result[$mail['to']] = 0;
 
-    if ($result[$mail['to']] !== 1) { // 
+    if ($result[$mail['to']] !== 1) { //
       throw new ValidationException($mail['to'] . " -> " . $result[$mail['to']]['info']);
     }
-
-    // Send mail
-    $mailObj = new Message;
-    $hostSettings = array(
-        'host' => $mail['host'],
-        'username' => $mail['user'],
-        'password' => $mail['password'],
-        'port' => intval($mail['port'], 10)
-    );
-    if ($mail['usessl'] == '1') $hostSettings['secure'] = 'ssl';
 
     $senderObj = new Nette\Mail\SmtpMailer($hostSettings);
 
@@ -110,7 +106,7 @@ foreach ($files as $file) {
       ->setSubject($mail['subject'])
       ->setHTMLBody($mail['body']);
     if (!is_null($mail['cc'])) $mailObj->addCc($mail['cc']);
-    
+
     $result = $senderObj->send($mailObj);
 
     $mail['last_error'] = null;
@@ -135,13 +131,13 @@ function ArrayToFile($source = array(), $destination) {
   file_put_contents($destination, implode("\n", $fileData));
 }
 
-function MailStructure(){
+function MailStructure($config = array()){
   return array(
     'identity' => null,
-    'host' => 'mail.platinmarketreform.com',
-    'user' => 'bildirim@platinmarketreform.com',
-    'password' => '123456789',
-    'port' => 587,
+    'host' => $config["relay_host"],
+    'user' => $config["relay_user"],
+    'password' => $config["relay_password"],
+    'port' => $config["relay_port"],
     'body' => null,
     'source' => null,
     'from' => null,
@@ -158,12 +154,12 @@ function MailStructure(){
 }
 
 function ParseMail($file, $mail) {
-  
+
   $patterns = array();
   foreach ($mail as $key => $value) $patterns[$key] = '/' . $key . ':(.*?)(\n(' . implode('|', array_keys($mail)) .  '):|\z)/s';
-  
+
   $file_content = file_get_contents($file);
-  
+
   foreach ($patterns as $key => $pattern) {
       $results = null;
       preg_match_all($pattern, $file_content, $results);
@@ -179,7 +175,7 @@ function ControlMail($mail){
   if (!is_null($mail['source'])) {
     $mail['body'] = file_get_contents_utf8($mail['source']);
     $mail['from_source'] = true;
-    $mail['html'] = is_null($mail['html']) ? true : $mail['html']; 
+    $mail['html'] = is_null($mail['html']) ? true : $mail['html'];
   } else {
     $mail['from_source'] = false;
     $mail['html'] = is_null($mail['html']) ? true : $mail['html'];
@@ -197,7 +193,7 @@ function WriteError($errObj = null, $resume = true){
       $message .= " at " . $errObj->getFile() . " line " . $errObj->getLine();
   }
   if (is_null($message)) $message .= $errObj;
-  
+
   fwrite(STDERR, $message . "\n");
 
   if ($resume == false) exit(1);
@@ -206,7 +202,7 @@ function WriteError($errObj = null, $resume = true){
 function Write($targetObj = null, $newline = true){
   $message = null;
   $message .= print_r($targetObj, true);
-  
+
   LogDebug($message);
   if (DEBUG === false) return;
   fwrite(STDOUT, $message);
@@ -216,12 +212,12 @@ function Write($targetObj = null, $newline = true){
 function ReadFiles($folder) {
   $files = array();
   if ($handle = opendir($folder)) {
-    while (false !== ($file = readdir($handle))) { 
-      if ($file == '.' || $file == '..' || $file == 'empty') continue; 
-      $file = $folder . DS . $file; 
-      if (is_file($file)) $files[]  = $file; 
-    } 
-    closedir($handle); 
+    while (false !== ($file = readdir($handle))) {
+      if ($file == '.' || $file == '..' || $file == 'empty') continue;
+      $file = $folder . DS . $file;
+      if (is_file($file)) $files[]  = $file;
+    }
+    closedir($handle);
   } else {
     WriteError("'" . $folder . "' can not open!");
   }
@@ -240,7 +236,7 @@ function LogMail($mail) {
     if (is_null($data)) $data = "0";
     $data = explode("\n", $data)[0];
     $message = str_replace("%" . $key . "%", $data, $message);
-  } 
+  }
   $message = preg_replace('/(%[a-zA-Z]+?%)/i', '0', $message);
   LogWrite($message);
 }
@@ -286,6 +282,10 @@ function get_utf8($input){
 
 // Validation Exception
 class ValidationException extends Exception {
+}
+
+// Config Exception
+class ConfigException extends Exception {
 }
 
 ?>
