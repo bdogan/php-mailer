@@ -145,6 +145,10 @@ function ArrayToFile($source = array(), $destination) {
 function MailStructure($config = array()){
   return array(
     'identity' => null,
+    'host' => null,
+    'user' => null,
+    'password' => null,
+    'port' => null,
     'body' => null,
     'source' => null,
     'from' => null,
