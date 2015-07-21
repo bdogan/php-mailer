@@ -121,7 +121,8 @@ foreach ($files as $file) {
     $result = $senderObj->send($mailObj);
 
     $mail['last_error'] = null;
-    rename($file, $config['sent'] . DS . uniqid(is_null($mail['identity']) ? "mail_" : $mail['identity'] . "_") . ".mai");
+    unlink($file);
+    //rename($file, $config['sent'] . DS . uniqid(is_null($mail['identity']) ? "mail_" : $mail['identity'] . "_") . ".mai");
 
     $mail['status'] = 0;
     LogMail($mail);
