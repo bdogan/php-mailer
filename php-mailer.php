@@ -91,14 +91,14 @@ foreach ($files as $file) {
     $mail = ControlMail($mail);
 
     // Validate 'to' address
-    $validator = new ValidatorEmail(array($mail['to']), $mail['from'], $validator_options);
-    $result = $validator->getResults();
-    if (is_array($result[$mail['to']]) && $result[$mail['to']]['info'] === "catch all detected") $result[$mail['to']] = 1; //Catch All Prevented
-    if (!isset($result[$mail['to']])) $result[$mail['to']] = 0;
+    //$validator = new ValidatorEmail(array($mail['to']), $mail['from'], $validator_options);
+    //$result = $validator->getResults();
+    //if (is_array($result[$mail['to']]) && $result[$mail['to']]['info'] === "catch all detected") $result[$mail['to']] = 1; //Catch All Prevented
+    //if (!isset($result[$mail['to']])) $result[$mail['to']] = 0;
 
-    if ($result[$mail['to']] !== 1) { //
-      throw new ValidationException($mail['to'] . " -> " . $result[$mail['to']]['info']);
-    }
+    //if ($result[$mail['to']] !== 1) { //
+    //  throw new ValidationException($mail['to'] . " -> " . $result[$mail['to']]['info']);
+    //}
 
     // Send mail
     $mailObj = new Message;
